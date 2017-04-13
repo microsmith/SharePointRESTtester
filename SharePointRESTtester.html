@@ -1,0 +1,984 @@
+
+<script language="javascript" src="jquery-3.1.0.min.js"></script>
+<!-- delete the previous line if your master page already loads jQuery. -->
+
+<script language="javascript">
+
+    // Mike Smith
+    // http://TechTrainingNotes.blogspot.com
+    // 10/14/2016
+    // Copyright 2017 (c) Microsmith, Inc.
+    // You may use this code for personal use to write and test SP REST or just to study!
+    // You may not republish this in another blog, or other format.
+
+    var testJSONdata;  // data returned from the AJAX call
+    var testNID;       // id for SP Notification popup so it can be closed later on
+
+
+    function testWebService () {
+        // display "Working" messages.
+        $('#testWebServiceWorking').text("Working...         ");
+        testNID = SP.UI.Notify.addNotification("<span style='color:blue'>Working...</span>");
+        setTimeout(testWebServiceContinue , 1);  // to update page display...
+    }
+
+    function testWebServiceContinue () {
+
+        // clean up from last run.
+        $('#testResults').html("&nbsp;");
+        $('#testJSONResults').html("");
+        $('#testAJAXobject').html("");
+        $('#ttnWFrequestHeaders').html("");
+        $('#ttnWFdatatype').html("");
+        $('#ttnWFmoredata').html("");
+        $('#testWFthis').html("");
+        $('#testWFrequestType').html("");
+
+
+        // This is the code to build the AJAX object and call AJAX
+
+        $('#outputBlock').show();
+
+        try {
+            // get the SharePoint generated __REQUESTDIGEST value
+            var requestDigest = $("#__REQUESTDIGEST").val();
+
+            var restUrl = $("#testWebServiceURL").val();
+            var restMethod =  $("#testWebServiceMethod").val();
+
+            var restBodyText = $("#testWebServiceBody").val();
+            var restHeadersText =  $("#testWebServiceHeaders").val();
+            restHeadersText = restHeadersText.replace("__len__",restBodyText.length);
+            restHeadersText = restHeadersText.replace("__yourRequestDigest__",requestDigest);
+            $("#testWebServiceHeaders").innerText = restHeadersText;
+
+
+            // Note: JSON.parse() is more strict than eval(). For example, JSON.parse requires double quotes while most
+            // JSON parsers will accept a single quote. JSON.parse also requires quoted names while many other parsers do not.
+            // Use the eval() version for more flexibility.
+
+            // validate the header JSON
+            try { restHeaders = JSON.parse(restHeadersText); }
+            catch (err) {  alert("Error parsing Headers: " + err.message + "\n" + restHeadersText); return  }
+
+
+            // validate the body JSON
+            if (restBodyText == "") {restBody=""} else
+            {
+                try { restBody = JSON.parse(restBodyText); }
+                catch (err) {  alert("Error parsing Body: " + err.message); return  }
+                try { eval("restBody = " + restBodyText); }
+                catch (err) {  alert("Error parsing Body: " + err.message); return  }
+            }
+
+            // build the $.AJAX object
+            var ajaxcall =    {
+                url: restUrl,
+                method: restMethod,
+                data: restBodyText,
+                headers: restHeaders,
+                success: function(data){testJSONdata = data; $("#testResults").html("<pre>" + JSON.stringify(data, undefined, 4) + "</pre>"); testCleanUp()},
+                error: function(err){$("#testResults").html("ERROR:  <pre>" + JSON.stringify(err, undefined, 4) + "</pre>"); testCleanUp()}
+        };
+
+            // remove the data property from the object if not needed.
+            if (restBodyText=="") { delete ajaxcall['data'] }
+
+
+            // display the AJAX script
+            var ajaxcallForDisplay = JSON.stringify(ajaxcall, undefined, 4);
+
+            ajaxcallForDisplay =  ajaxcallForDisplay.substring(0,ajaxcallForDisplay.length-2) + ',\n    "success" = successfunction,\n' + '    "error" = errorfunction\n}';
+            ajaxcallForDisplay = ajaxcallForDisplay.replace(/\\n/g,"");
+            ajaxcallForDisplay = ajaxcallForDisplay.replace(/\\"/g,"\"");
+            ajaxcallForDisplay = ajaxcallForDisplay.replace(/               /g," ");
+            ajaxcallForDisplay = ajaxcallForDisplay.replace(/"data": "{"/g,"\"data\": \'{\"");
+            ajaxcallForDisplay = ajaxcallForDisplay.replace(/ } }",/g," } }',");
+            ajaxcallForDisplay = ajaxcallForDisplay.replace(requestDigest ,"yourRequestDigestGoesHere");
+
+            $("#testAJAXobject").html("<pre>$.ajax(\n" + ajaxcallForDisplay + "\n);</pre>");
+
+
+            $('#SP2013wf').show();
+
+
+            $("#testWFthis").html(restUrl.substring(restUrl.indexOf("_api")));
+
+
+            // get rid of the X-RequestDigest - not needed for workflows
+            if (restHeadersText.indexOf("X-RequestDigest")>0)
+            {
+                var restHeadersText2 = restHeadersText.split(",");
+                restHeadersText2 = restHeadersText2.slice(0,restHeadersText2.length-2)
+                restHeadersText = restHeadersText2.join(",") + " }";
+            }
+
+            var headerData = JSON.parse(restHeadersText);
+
+            var headers = $("#ttnWFrequestHeaders").get(0);
+            
+            headers.innerHTML = "";
+            for (var name in headerData ) {
+                if (name != "content-length") {
+                    headers.innerHTML +=
+                        '&nbsp;&nbsp;Name:  <span class="ttnWFspan">' + name + '</span> <br>' +
+                        '&nbsp;&nbsp;Type:  <span class="ttnWFspan">String</span>  <br>' +
+                        '&nbsp;&nbsp;Value: <span class="ttnWFspan">' + headerData[name] + '</span> <br><br>  '
+                }
+            }
+
+            $("#testWFrequestType").text(restMethod);
+
+            if (restBodyText == "")
+            {
+                $("#ttnHasBody01").hide();
+                $("#ttnWFrequestData").hide();
+            }
+            else
+            {
+                $("#ttnWFrequestData").show();
+                $("#ttnHasBody01").show();
+                var bodyData = JSON.parse(restBodyText);
+                $("#ttnHasBody02").hide();
+
+
+                // are there three tiers to the body JSON?
+                if(bodyData.hasOwnProperty("parameters") | bodyData.hasOwnProperty("query")) 
+                { 
+                    $("#ttnHasBody02").show();
+                    $("#ttnContentDataName").text("requestData")
+                    // drill down one level for the metadata
+                    if(bodyData.parameters)
+                    {
+                        bodyData = bodyData.parameters;
+                    }
+                    else
+                    {
+                        bodyData = bodyData.query;
+                    }
+                }
+                else
+                {
+                    $("#ttnContentDataName").text("requestContent")
+                }
+
+
+                var moredata = $("#ttnWFmoredata").get(0);
+                moredata.innerHTML = "<br>";
+                for (var name in bodyData ) {
+                    if (name != "__metadata") {
+                        var spanData = "" + bodyData[name];
+                        spanData = spanData.replace(/</g, "&lt;").replace(/>/g, "&gt;")
+                        moredata.innerHTML +=
+                            '&nbsp;&nbsp;Name:  <span class="ttnWFspan">' + name + '</span> <br>' +
+                            '&nbsp;&nbsp;Type:  <span class="ttnWFspan">String</span>  <br>' +
+                            '&nbsp;&nbsp;Value: <span class="ttnWFspan">' + spanData + '</span> <br><br>  '
+                    }                    
+                }
+                $("#ttnWFdatatype").text(bodyData.__metadata.type);
+            }
+
+
+
+            // run the code! Select, change, create and delete stuff!
+            if ($('#testResultsBlock').is(':visible'))
+            {
+                try {
+                    var testSuccessFail = $.ajax( ajaxcall )
+                }
+                catch(err) {
+                    alert(err.message)
+                }
+            }
+            else
+            {
+                testCleanUp();
+            }
+
+
+        } catch(err) {
+            $('#testWebServiceWorking').text("Error!         ");
+            alert(err);
+        }
+
+    }
+
+
+
+    function testCleanUp() {
+        $('#testWebServiceWorking').text("");
+        SP.UI.Notify.removeNotification(testNID);
+    }
+
+
+    // called from the select dropdown to dislay a sample REST call
+    function displayTestWebServiceSample() {
+        var siteUrl = L_Menu_BaseUrl;  //ctx.HttpRoot;  //built-in SharePoint value 
+        var myselect = document.getElementById("testWebServiceSamples");
+        document.getElementById("testWebServiceURL").value =  siteUrl + myselect.options[myselect.selectedIndex].value;
+        document.getElementById("testWebServiceMethod").value = myselect.options[myselect.selectedIndex].getAttribute("method");
+        document.getElementById("testWebServiceHeaders").value = myselect.options[myselect.selectedIndex].getAttribute("headers");
+        document.getElementById("testWebServiceBody").value = myselect.options[myselect.selectedIndex].getAttribute("body");
+        document.getElementById("testNotes").innerText = myselect.options[myselect.selectedIndex].getAttribute("notes");
+        document.getElementById("testJSONpath").value = myselect.options[myselect.selectedIndex].getAttribute("sampleJSON");
+
+        document.getElementById("testWFJSONpath").innerText = myselect.options[myselect.selectedIndex].getAttribute("sampleJSON").replace("data.d.","");
+
+        AutoSizeTextAreas();
+
+    }
+
+
+
+    // process "Experiment with the JSON results" button.
+    // This takes the returned data and extracts data using data.d.someobject...
+    function testParseSomeJSON(path)
+    {
+        // take user input in the form of "data.d.something" and see if we can EVAL it.
+        try {
+            var testJSONquery = "";
+            path = path.replace(/data.d./g,"testJSONdata.d.");
+            eval("testJSONquery = " + path);
+            document.getElementById("testJSONResults").innerText = JSON.stringify(testJSONquery, undefined, 4);
+        } catch (err) {alert("Error for " + path + ":\n" +err.message)}
+    }
+
+</script>
+
+
+<style type="text/css">
+  .ttnResultDiv {
+        border: thin blue solid;
+        width: 800px;
+        display: inline-flex;
+        overflow-x: scroll;
+        white-space: nowrap;
+    }
+
+    .ttnWFspan {
+        color: blue;
+        font-weight: bold;
+    }
+</style>
+
+
+<!-- The UI -->
+
+<div style="max-width:400">
+
+    <h2>SharePoint 2013 and later REST Tester!  (SharePointRESTtester)</h2><br>
+    This tool is used to build and test the REST API for SharePoint 2013 and later. It currently only supports JSON data and not XML.<br>
+    For info see <a href="http://TechTrainingNotes.blogspot.com">Tech Training Notes blog</a> or <a href="https://github.com/microsmith/SharePointRESTtester">GitHub</a>. <br><br>
+
+    <!--
+        // The following SELECT is the Sample list
+        //
+        // The following are replaced when clicking "Call the web service" button:
+        //  __len__ will be replaced in the headers with the length of the body text
+        //  __yourRequestDigest__ will be replaced with the current RequestDigest found in the page.
+        //                        (document.getElementById("__REQUESTDIGEST").value)
+        //
+        // a future version will store these values in a SharePoint list.
+    -->
+
+    <b>Select a sample from this list, or add your URL and JSON to test.</b><br>
+    <select id="testWebServiceSamples" onchange="displayTestWebServiceSample(); return false;">
+        <option value="">Samples</option>
+        <optgroup label="Queries">
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes=""
+                    sampleJSON="data.d.PrimaryUri"
+                    value="/_api/site">
+                Get information about the current site collection.
+            </option>
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes=""
+                    sampleJSON="data.d.Created"
+                    value="/_api/web">
+                Get information about the current web.
+            </option>
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes=""
+                    sampleJSON="data.d.LocaleId"
+                    value="/_api/web/RegionalSettings">
+                Get the Regional Settings for the current web.
+            </option>
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes=""
+                    sampleJSON="data.d.Description"
+                    value="/_api/web/RegionalSettings/TimeZone">
+                Get the Time Zone for the current web.
+            </option>
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes=""
+                    sampleJSON="data.d.results[5].Description"
+                    value="/_api/web/RegionalSettings/TimeZones">
+                Get SharePoint's list of Time Zones.
+            </option>
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes=""
+                    sampleJSON="data.d.results[0].Title"
+                    value="/_api/web/webs?$select=Title,Url">
+                Get a list of all webs below the current web.
+            </option>
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes=""
+                    sampleJSON="data.d.Email"
+                    value="/_api/site/Owner">
+                Get the primary site collection administrator (Owner).
+            </option>
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes=""
+                    sampleJSON="data.d.Email"
+                    value="/_api/site/SecondaryContact">
+                Get the primary site collection Secondary Contact.
+            </option>
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes=""
+                    sampleJSON="((new Date())- (new Date( data.d.LastItemUserModifiedDate))) / 86400000 + ' days'"
+                    value="/_api/web?$select=LastItemModifiedDate,LastItemUserModifiedDate">
+                Get a web's LastItemModifiedDate
+            </option>
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes=""
+                    sampleJSON="data.d.results.length"
+                    value="/_api/web/lists">
+                Get a list of lists from the current web. (all data)
+            </option>
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes=""
+                    sampleJSON="data.d.results.length"
+                    value="/_api/web/lists?$select=Title">
+                Get a list of lists from the current web. (Just the title)
+            </option>
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes="Change the list/library name"
+                    sampleJSON="data.d.ItemCount"
+                    value="/_api/web/lists/getbytitle('Documents')?$Select=ItemCount">
+                Get a count of items in a library.
+            </option>
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes="Change the list/library name"
+                    sampleJSON="data.d.ItemCount"
+                    value="/_api/web/lists/getbytitle('Documents')/itemcount">
+                Get a count of items in a library. (Option #2)
+            </option>
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes="Change the library name"
+                    sampleJSON="data.d.results.length"
+                    value="/_api/web/lists/getbytitle('Documents')/items?$select=Title">
+                Get all items in a list/library.
+            </option>
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes="Change the library name. Must use internal field names. (i.e. use FileLeafRef, not Name)"
+                    sampleJSON="data.d.results.length"
+                    value="/_api/web/lists/getbytitle('Documents')/items?$select=FileDirRef,FileLeafRef,Title,Created,Modified">
+                Get all items in a library with filename and path.
+            </option>
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes="Change the site, list and folder names."
+                    sampleJSON="data.d.ItemCount"
+                    value="/_api/web/getfolderbyserverrelativeurl('/sites/yourSite/Lists/yourList/yourFolder')">
+                Get a list folder's properties.
+            </option>
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes="Change the site, list and folder names."
+                    sampleJSON="data.d.ItemCount"
+                    value="/_api/web/getfolderbyserverrelativeurl('/sites/yourSite/Lists/yourList/yourFolder')/itemcount">
+                Get a count of items in a list folder.
+            </option>
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes="Change the library name. Date must be yyyy-mm-ddT00:00:00"
+                    sampleJSON="data.d.results.length"
+                    value="/_api/web/lists/getbytitle('Documents')/items?$select=Title&$filter=Created gt datetime'2016-8-6T00:00:00'">
+                Get all items in a list/library filtered by date.
+            </option>
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes=""
+                    sampleJSON="data.d.results.length"
+                    value="/_api/web/Recyclebin">
+                Get all items in web level recycle bin.
+            </option>
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes=""
+                    sampleJSON="data.d.results.length"
+                    value="/_api/web/RecycleBin?$select=LeafName,DeletedByName,DeletedDateLocalFormatted">
+                Get selected properties of all items in web level recycle bin.
+            </option>
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes="Change the library name"
+                    sampleJSON="data.d.results.length"
+                    value="/_api/web/lists/getbytitle('Documents')/items?$select=Title&$filter=Created gt datetime'2016-8-6T00:00:00'">
+                Get all items in a list/library filtered by a range of dates.
+            </option>
+
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes="Change the querytext in the URL."
+                    sampleJSON="data.d.query.PrimaryQueryResult.RelevantResults.RowCount"
+                    value="/_api/search/query?querytext='sharepoint'&selectproperties='Title,Author'&refinementfilters='fileExtension:equals(&quot;docx&quot;)'">
+                Search
+            </option>
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes="Change the querytext in the URL. The SourceId GUID represents the People content source."
+                    sampleJSON="data.d.query.PrimaryQueryResult.RelevantResults.RowCount   // or data.d.query.PrimaryQueryResult.RelevantResults.Table.Rows.results.length"
+                    value="/_api/search/query?querytext='*'&sourceid='B09A7990-05EA-4AF9-81EF-EDFAB16C4E31'&rowlimit=100&selectproperties='PreferredName,Birthday'">
+                People Search
+            </option>
+        </optgroup>
+        <optgroup label="Lists">
+            <option method="POST"
+                    body='{"__metadata": { "type": "SP.List" },
+	               "AllowContentTypes": true,
+	               "BaseTemplate": 100,
+	               "ContentTypesEnabled": true,
+	               "Description": "My list description",
+	               "Title": "Test" }'
+                    headers='{"accept": "application/json;odata=verbose",
+                       "content-type": "application/json;odata=verbose",
+	                   "content-length":__len__,
+	                   "X-RequestDigest&quot;: &quot;__yourRequestDigest__"}'
+                    notes="Change the list title."
+                    sampleJSON="data.d.Id"
+                    value="/_api/web/lists">
+                Create a new list
+            </option>
+            <option method="POST"
+                    body='{"__metadata":{"type":"SP.Data.AnnouncementsListItem"},
+	                "Title":"Test announcement", "Body":"hello!" }'
+                    headers='{ "accept": "application/json;odata=verbose",
+	                   "content-type": "application/json;odata=verbose",
+	                   "content-length":__len__,
+	                   "X-RequestDigest&quot;: &quot;__yourRequestDigest__"}'
+                    notes="Change the list title, the SP.Data.type and the item data!"
+                    sampleJSON="data.d.Id"
+                    value="/_api/web/lists/GetByTitle('Announcements')/Items">
+                Add a new item to a list
+            </option>
+            <option method="POST"
+                    body='{"__metadata":{"type":"SP.Folder"}, "ServerRelativeUrl": "/document library relative url/folder name"}',
+                    headers='{ "accept": "application/json;odata=verbose",
+	                   "content-type": "application/json;odata=verbose",
+	                   "content-length":__len__,
+	                   "X-RequestDigest&quot;: &quot;__yourRequestDigest__"}'
+                    notes="Change the folder title and the ServerRelativeUrl!"
+                    sampleJSON="data.d.Id"
+                    value="/_api/web/folders">
+                Add a new folder to a list
+            </option>
+            <option method="POST"
+                    body=""
+                    headers='{ "accept": "application/json;odata=verbose",
+	                   "content-type": "application/json;odata=verbose",
+	                   "X-HTTP-Method": "DELETE",
+	                   "If-Match": "*",
+	                   "X-RequestDigest": "__yourRequestDigest__"}'
+                    notes="Change the list title, item ID! DELETE does not return any data. For more info on eTags and If-Match see: https://blogs.msdn.microsoft.com/uksharepoint/2013/02/22/manipulating-list-items-in-sharepoint-hosted-apps-using-the-rest-api/"
+                    sampleJSON="data.d.Id"
+                    value="/_api/web/lists/GetByTitle('Announcements')/Items(1)">
+                Delete an item from a list using ID
+            </option>
+            <option method="POST"
+                    body=""
+                    headers='{ "accept": "application/json;odata=verbose",
+	                   "content-type": "application/json;odata=verbose",
+	                   "X-HTTP-Method": "DELETE",
+	                   "If-Match": "*",
+	                   "X-RequestDigest": "__yourRequestDigest__"}'
+                    notes="Change the list title, item ID! DELETE does not return any data. For more info on eTags and If-Match see: https://blogs.msdn.microsoft.com/uksharepoint/2013/02/22/manipulating-list-items-in-sharepoint-hosted-apps-using-the-rest-api/"
+                    sampleJSON="data.d.Id"
+                    value="/_api/web/lists/GetByTitle('Announcements')/Items(1)/recycle()">
+                Delete an item, to the Recycle Bin, from a list using ID
+            </option>
+            <option method="POST"
+                    body='{ "__metadata": { "type": "SP.ListItem" }, "Title": "New title" }'
+                    headers='{ "accept": "application/json;odata=verbose",
+	                   "content-type": "application/json;odata=verbose",
+	                   "X-HTTP-Method": "MERGE",
+	                   "If-Match": "*",
+	                   "X-RequestDigest": "__yourRequestDigest__"}'
+                    notes="Change the list title, item ID! DELETE does not return any data. For more info on eTags and If-Match see: https://blogs.msdn.microsoft.com/uksharepoint/2013/02/22/manipulating-list-items-in-sharepoint-hosted-apps-using-the-rest-api/"
+                    sampleJSON="data.d.Id"
+                    value="/_api/web/lists/GetByTitle('Announcements')/Items(1)">
+                Update an item using ID
+            </option>
+            <option method="POST"
+                    body=""
+                    headers='{ "accept": "application/json;odata=verbose",
+	                   "content-type": "application/json;odata=verbose",
+	                   "X-HTTP-Method": "DELETE",
+	                   "If-Match": "*",
+	                   "X-RequestDigest": "__yourRequestDigest__"}'
+                    notes="Change the list title in the URL! DELETE does not return any data.  For more info on eTags and If-Match see: https://blogs.msdn.microsoft.com/uksharepoint/2013/02/22/manipulating-list-items-in-sharepoint-hosted-apps-using-the-rest-api/"
+                    sampleJSON="data.d.Id"
+                    value="/_api/web/lists/GetByTitle('Announcements')">
+                Delete a list
+            </option>
+            <option method="POST"
+                    body=""
+                    headers='{ "accept": "application/json;odata=verbose",
+	                   "content-type": "application/json;odata=verbose",
+	                   "X-RequestDigest": "__yourRequestDigest__"}'
+                    notes="Change the list title in the URL!"
+                    sampleJSON="data.d.Id"
+                    value="/_api/web/lists/GetByTitle('Announcements')/recycle()">
+                Delete a list to the Recycle Bin
+            </option>
+        </optgroup>
+        <optgroup label="Sites">
+            <option method="POST"
+                    body='{"parameters":{ "__metadata":{"type":"SP.WebInfoCreationInformation"},
+	               "Url":"testsub",
+	               "Title":"Test subsite",
+	               "Description":"This is test site",
+	               "Language":1033,
+	               "WebTemplate":"sts#0",
+	               "UseUniquePermissions":"false" } }' ,
+                    headers='{ "accept": "application/json;odata=verbose",
+	                    "content-type": "application/json;odata=verbose",
+	                    "content-length":__len__,
+	                    "X-RequestDigest": "__yourRequestDigest__"}'
+                    notes="Change the details in the Body!"
+                    sampleJSON="data.d.Id"
+                    value="/_api/web/webinfos/add">
+                Create a new subsite.
+            </option>
+            <option method="POST"
+                    body=""
+                    headers='{ "accept": "application/json;odata=verbose",
+	                   "content-type": "application/json;odata=verbose",
+	                   "X-HTTP-Method": "DELETE",
+	                   "X-RequestDigest": "__yourRequestDigest__"}'
+                    notes="Change the 'sitename' in the URL! DELETE does not return any data."
+                    sampleJSON="data.d"
+                    value="/sitename/_api/web">
+                Delete a site (Warning Will Robinson! Does not go to the Recycle Bin!)
+            </option>
+        </optgroup>
+
+        <optgroup label="User Profiles">
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes=""
+                    sampleJSON="data.d.UserProfileProperties.results"
+                    value="/_api/SP.UserProfiles.PeopleManager/GetMyProperties">
+                Get User Profile info about the current user.
+            </option>
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes="replace 'spdemo\samc' with a user's ID. For SharePoint Online use something like i:0%23.f|membership|samc@yourdomain.onmicrosoft.com "
+                    sampleJSON="data.d.UserProfileProperties.results[10]"
+                    value="/_api/SP.UserProfiles.PeopleManager/GetPropertiesFor(accountName=@v)?@v='spdemo\samc'">
+                Get all User Profile properties for a user.
+            </option>
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes="replace 'spdemo\samc' with a user's ID.  For SharePoint Online use something like i:0%23.f|membership|samc@yourdomain.onmicrosoft.com "
+                    sampleJSON="data.d.Manager"
+                    value="/_api/SP.UserProfiles.PeopleManager/GetUserProfilePropertyFor(accountName=@v,propertyName='Manager')?@v='spdemo\samc'">
+                Get User Profile info about a user's manager.
+            </option>
+        </optgroup>
+
+        <optgroup label="Permissions">
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes="This is useful to get the Permission Level's ID for use with AddRoleAssignment."
+                    sampleJSON="data.d.results[0].Name + ' ' + data.d.results[0].Id"
+                    value="/_api/web/roledefinitions">
+                Get a list of Role Definitions for a site.
+            </option>
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes=""
+                    sampleJSON="data.d.results[6].LoginName + ' ' + data.d.results[6].Id"
+                    value="/_api/web/siteusers?$select=Title,LoginName,Id">
+                Get a list of Site Users. The ID is useful when setting permissions.
+            </option>
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes=""
+                    sampleJSON="data.d.results[1].LoginName + ' ' + data.d.results[1].Id"
+                    value="/_api/web/sitegroups">
+                Get a list of Site Groups. The ID is useful when setting permissions.
+            </option>
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes="Name text is case sensitive!"
+                    sampleJSON="data.d.results[1].LoginName + ' ' + data.d.results[1].Id"
+                    value="/_api/web/sitegroups?$filter=LoginName eq 'Permissions Test Owners'">
+                Get a list of Site Groups by name.
+            </option>
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes="Name text is case sensitive!"
+                    sampleJSON="data.d.results[1].LoginName + ' ' + data.d.results[1].Id"
+                    value="/_api/web/sitegroups?$filter=substringof('Owners',LoginName)">
+                Get a list of Site Groups where name contains 'string'.
+            </option>
+            <option method="POST"
+                    body=""
+                    headers='{ "accept": "application/json;odata=verbose",
+	                   "content-type": "application/json;odata=verbose",
+	                   "X-RequestDigest": "__yourRequestDigest__"}'
+                    notes="Change the 'sitename' in the URL! "
+                    sampleJSON="data.d"
+                    value="/sites/permissions/sitename/_api/web/breakroleinheritance(copyRoleAssignments=true, clearSubscopes=true)">
+                Break inheritance on a subsite.
+            </option>
+            <option method="POST"
+                    body=""
+                    headers='{ "accept": "application/json;odata=verbose",
+	                   "content-type": "application/json;odata=verbose",
+	                   "X-RequestDigest": "__yourRequestDigest__"}'
+                    notes="Change list name in the URL! Note the copyRoleAssignments and clearSubscopes options."
+                    sampleJSON="data.d"
+                    value="/_api/web/lists/getByTitle('Test')/breakroleinheritance(copyRoleAssignments=true, clearSubscopes=true)">
+                Break inheritance on a list.
+            </option>
+            <option method="POST"
+                    body=""
+                    headers='{ "accept": "application/json;odata=verbose",
+	                   "content-type": "application/json;odata=verbose",
+	                   "X-RequestDigest": "__yourRequestDigest__"}'
+                    notes="Change list name and item ID in the URL! Note the copyRoleAssignments and clearSubscopes options."
+                    sampleJSON="data.d"
+                    value="/_api/web/lists/getByTitle('Test')/Items(1)/breakroleinheritance(copyRoleAssignments=true, clearSubscopes=true)">
+                Break inheritance on a list item.
+            </option>
+            <option method="POST"
+                    body=""
+                    headers='{ "accept": "application/json;odata=verbose",
+	                   "content-type": "application/json;odata=verbose",
+	                   "X-RequestDigest": "__yourRequestDigest__"}'
+                    notes="You will need the user's ID (principalid) and the Role Definition ID (roleDefId). 1073741827 is Contribute."
+                    sampleJSON="data.d"
+                    value="/_api/web/lists/getByTitle('Test')/roleassignments/addroleassignment(principalid=20,roleDefId=1073741828)">
+                Grant permissions (Role Assignment) on a list.
+            </option>
+            <option method="POST"
+                    body=""
+                    headers='{ "accept": "application/json;odata=verbose",
+	                   "content-type": "application/json;odata=verbose",
+	                   "X-RequestDigest": "__yourRequestDigest__"}'
+                    notes="You will need the user's ID (principalid) and the Role Definition ID (roleDefId). 1073741827 is Contribute."
+                    sampleJSON="data.d"
+                    value="/_api/web/lists/getByTitle('Test')/roleassignments/removeroleassignment(principalid=20,roleDefId=1073741828)">
+                Remove permissions (Role Assignment) on a list.
+            </option>
+        </optgroup>
+        <optgroup label="Filter Select and OrderBy">
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes="PrincipalType 1 is a user, 2 is Distribution List, 4 is an AD security group, 8 is SharePoint Group, 15 is for 'All'. For more on Query String options see: https://msdn.microsoft.com/en-us/library/office/fp142385.aspx"
+                    sampleJSON="data.d.results[6].LoginName + ' ' + data.d.results[6].Id"
+                    value="/_api/web/siteusers?$filter=IsSiteAdmin eq false&$select=Title,LoginName,Id,PrincipalType&$orderby=PrincipalType">
+                Get a list of Site Users who are not Site Collection admins. Get selected fields and sort.
+            </option>
+
+
+        </optgroup>
+        <optgroup label="SharePoint 2010 style REST - _vti_bin/ListData.svc">
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes="Date must be in the form of yyyy-mm-dd" (two digits for month and year)
+                    value="/_vti_bin/ListData.svc">
+                Get a list of lists and libraries (EntitySets).
+            </option>
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes="Date must be in the form of yyyy-mm-dd" (two digits for month and year)
+                    value="/_vti_bin/ListData.svc/Documents?$select=Title,Created&$filter=Created gt datetime'2016-08-06'">
+                Find list items greater than a date.
+            </option>
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes="Date must be in the form of yyyy-mm-dd" (two digits for month and year)
+                    value="/_vti_bin/ListData.svc/Documents?$select=Title,Created&$filter=Created gt datetime'2015-08-06' and Created lt datetime'2016-08-06'">
+                Find list items between two dates.
+            </option>
+        </optgroup>
+    </select>
+
+
+    <!-- display the editing boxes -->
+    <br>
+    Notes:<br>
+    <div style="color:red" id="testNotes">&nbsp;</div>
+    <br>
+
+    <!-- URL, Method, Headers and Body -->
+    <table>
+        <tr><td><b>URL:</b>    </td><td><input type="text" id="testWebServiceURL" style="width:500px" /></td></tr>
+        <tr><td><b>Method:</b> </td><td><input type="text" id="testWebServiceMethod" style="width:50px" /></td></tr>
+        <tr><td><b>Headers:</b></td><td><textarea rows="1" cols="60" id="testWebServiceHeaders" style="width:600px"></textarea> </td></tr>
+        <tr><td><b>Body:</b><br>Must use single quotes!</td><td><textarea rows="1" cols="60" id="testWebServiceBody" style="width:600px"></textarea></td></tr>
+    </table>
+
+
+
+
+    <!-- the buttons -->
+
+    <br><br>
+    <input type="checkbox" id="runCode" onclick="$('#testResultsBlock').toggle()" /> Call the web service and run the code!<br>
+    <input type="checkbox" id="showAJAXCode" onclick="$('#AjaxResultsBlock').toggle()" /> Show the AJAX Code <br>
+    <input type="checkbox" id="showWFCode" onclick="$('#WFResultsBlock').toggle() " /> Show the workflow steps<br>
+
+    <button onclick="if(!window.jQuery) {alert('jQuery not loaded yet!');return false;} testWebService(); return false;" style="color:red;font-weight:bold">Do It!</b></button>
+    <marquee style="width:100px">
+      <span id="testWebServiceWorking" style="color:blue;font-weight:bold"></span></marquee>
+    <br><br><br>
+
+
+
+    <!-- the output -->
+
+    <div id="outputBlock" style="display:none">
+
+        <div id="testResultsBlock" style="display:none">
+
+
+            <!-- The result of the call in JSON  -->
+            Results:<br>
+
+            <div id="resultsError" style="color:red"></div>
+
+            <div id="testResults" class="ttnResultDiv" style="border:thin blue solid">&nbsp;</div>
+            <br><br>
+
+
+            <!-- the "test the data" area  -->
+            Experiment with the JSON results!<br>
+            &nbsp;&nbsp;JSON object path: (any expression that returns a JavaScript object that can be JSON serialized.)<br>
+            For this test the JavaScript object is "data" and the top JSON node is "d".<br>
+            &nbsp;&nbsp;<input type="text" id="testJSONpath" value="d" style="width:500px" onkeypress="function(e) {alert(1); var key=e.keyCode || e.which; if (key==13) {testParseSomeJSON(document.getElementById('testJSONpath').value); return false;}}" />
+            <br>
+            <button id="testJSONButton" onclick="testParseSomeJSON(document.getElementById('testJSONpath').value); return false;" style="color:red;font-weight:bold">Get data</button><br>
+            &nbsp;&nbsp;JSON results:<br>
+            <div id="testJSONResults" class="ttnResultDiv" style="">&nbsp;</div>
+            <br><br>
+
+        </div>
+
+
+        <div id="AjaxResultsBlock" style="display:none">
+
+            <!-- the AJAX code to use in web part and apps -->
+            AJAX JavaScript Code:  <i>(Update with your parameters!)</i><br>
+            <div id="testAJAXobject" class="ttnResultDiv" style="">&nbsp;</div>
+            <br><br><br>
+
+        </div>
+
+
+
+
+        <!-- Instructions for calling the web service from a SPD2013 workflow -->
+
+        <div id="WFResultsBlock" style="display:none;color:black;font-size:larger">
+
+            <div id="SP2013wf" style="border:thin blue solid; width:800px;padding:10px ">
+
+                <br>
+
+                <h2>Steps to add this REST call to a SharePoint 2013 workflow</h2>
+                <br>
+                These steps are for the URL, method, header and body entered above!<br><br>
+
+                <b>Add Build Dictionary Action for the header values.</b> <br>
+                Add a <b>Build Dictionary</b> action.<br>
+                Click "this". <br>
+                Click "Add", enter data and click OK for each of the following. <br>
+                <span id="ttnWFrequestHeaders"></span>
+                Click OK. <br>
+                Click "Variable:dictionary". <br>
+                Click "Create a new variable". <br>
+                Enter "requestHeaders". <br>
+                Click OK. <br>
+                <br>
+
+                <span id="ttnHasBody01" style="display:none">
+                    <b>Add a second Dictionary with these values and save to a variable named dataType.</b> <br>
+                    &nbsp;&nbsp;Name:  <span class="ttnWFspan">type</span> <br>
+                    &nbsp;&nbsp;Type:  <span class="ttnWFspan">String</span>  <br>
+                    &nbsp;&nbsp;Value: <span id="ttnWFdatatype" class="ttnWFspan"></span> <br>
+                    <br>
+                    <b>Add a third Dictionary with these values and save to a variable named <span id="ttnContentDataName">requestContent</span>.</b> <br>
+                    &nbsp;&nbsp;Name:  <span class="ttnWFspan">__metadata</span> <br>
+                    &nbsp;&nbsp;Type:  <span class="ttnWFspan">Dictionary</span>  <br>
+                    &nbsp;&nbsp;Value: <span class="ttnWFspan">Variable: dataType</span> (from the fx button) <br>
+                    <span id="ttnWFmoredata"></span> <br>
+                </span>
+
+                <!-- needed for "Create a Site"" -->
+                <span id="ttnHasBody02" style="display:none">
+                    <b>Add a fourth Dictionary with these values and save to a variable named requestContent.</b> <br>
+                    &nbsp;&nbsp;Name:  <span class="ttnWFspan">parameters</span> <br>
+                    &nbsp;&nbsp;Type:  <span class="ttnWFspan">Dictionary</span>  <br>
+                    &nbsp;&nbsp;Value: <span class="ttnWFspan">Variable: requestData</span> <br>
+                    <br>
+                </span>
+                <br>
+
+
+                <b>Add Call HTTP Web Service Action.</b> <br>
+                Add a <b>Call HTTP Web Service</b> action.<br>
+                Click "this". <br>
+                Enter URL with the query string or... <br>
+                Click "...". <br>
+                Click "Add or Change Lookup". <br>
+                From "Data Source" select "Workflow Context". <br>
+                From "Field from source" select "Current Site URL". <br>
+                Click OK. <br>
+                Add the following: (<i>with the correct site path!</i>)  <br>
+                &nbsp;&nbsp; <span id="testWFthis" class="ttnWFspan"></span> <br>
+                Set the HTTP method to: &nbsp;&nbsp;HTTP <span id="testWFrequestType" class="ttnWFspan"></span>. <br>
+                Click OK. <br>
+                Click the dropdown and click Properties. <br>
+                Click "RequestHeaders" and select "requestHeaders" from the dropdown. <br>
+                <div id="ttnWFrequestData">
+                Click "RequestContent" and select "requestContent" from the dropdown. <br>
+                </div>
+                Click "ResponseContent" and select "Create New Variable" from the dropdown, enter "responseData" and click OK. <br>
+                <br>
+                <br>
+
+                <b>Add a Get an Item from a Dictionary Action so you can display some results.</b> <br>
+                Add a <b>Get an Item from a Dictionary</b> action.<br>
+                Click "item by name or path". 
+                (You will need to know the data that's being returned to complete this.) Example: <span id="testWFJSONpath" class="ttnWFspan">test</span><br>
+                Click "dictionary" and select "responseData". <br>
+                Click "item" and enter a variable name for your retrieved data. <br>
+                <br>
+
+                <i>Do something with your retrieved data! Log it, add to a list or send as part of an email!</i><br>
+
+            </div>
+            
+        </div>
+    </div>
+
+    <br><br><br><br>
+
+
+
+
+    <script>
+        // fix for SharePoint/FireFox bug! This is not part of the JSON tester code...
+
+        // SharePoint input element bug handler
+        // More bug: http://social.technet.microsoft.com/Forums/sharepoint/en-US/33df42ba-00b3-41a8-8fb9-f8187cfc216d/strange-behavior-in-firefox-input-text-with-enter-opens-page-for-editing?forum=sharepointgeneralprevious
+        // This fix stops form submit => blocks transfer to edit mode
+
+        var disableFormSubmitDueToBug = false;
+        var bugSubmitHandlerAttached = false;
+
+
+        $("input[id^='test']").keydown(function(e){
+            if(e.keyCode == 13 ) {
+                disableFormSubmitDueToBug = true;
+                bindBugSubmitHandler();
+            } else {
+                unbindBugSubmitHandler();
+            }
+        }).focusout(function(){
+            unbindBugSubmitHandler();
+        });
+
+        function bindBugSubmitHandler(){
+            $( "form" ).bind("submit", function( e ) {
+                if(disableFormSubmitDueToBug) {
+                    e.preventDefault();
+                    console.log('Blocked submit by SP bug handler');
+                }
+                bugSubmitHandlerAttached = true;
+            });
+        }
+
+        function unbindBugSubmitHandler(){
+            if(bugSubmitHandlerAttached){
+                $( "form" ).unbind("submit");
+                bugSubmitHandlerAttached = false;
+                console.log('SP bug submit handler unbind occurred');
+            }
+        }
+
+        // end of fix for SharePoint / FireFox bug!
+
+
+
+        // code to autosize the TEXTAREA tags
+        // found here: http://stackoverflow.com/questions/454202/creating-a-textarea-with-auto-resize
+        function AutoSizeTextAreas()
+        {
+            $('textarea').each(function () {
+                this.setAttribute('style', 'height:10px');
+                this.setAttribute('style', 'height:' + (this.scrollHeight) + 'px;overflow-y:hidden;');
+            }).on('input', function () {
+                this.style.height = '10px';
+                this.style.height = 'auto';
+                this.style.height = (this.scrollHeight) + 'px';
+            });
+        }
+        AutoSizeTextAreas();
+
+    </script>
+
