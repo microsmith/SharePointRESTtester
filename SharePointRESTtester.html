@@ -5,11 +5,13 @@
 <script language="javascript">
 
     // Mike Smith
-    // http://TechTrainingNotes.blogspot.com
-    // 10/14/2016
-    // Copyright 2017 (c) Microsmith, Inc.
+    // http://techtrainingnotes.blogspot.com/2017/04/a-sharepoint-rest-api-tester-with-ajax.html
+    // 4/13/2017
+    // Copyright (c) 2017,2018 Microsmith, Inc.
     // You may use this code for personal use to write and test SP REST or just to study!
     // You may not republish this in another blog, or other format.
+    
+    // Last updated: 1/22/18
 
     var testJSONdata;  // data returned from the AJAX call
     var testNID;       // id for SP Notification popup so it can be closed later on
@@ -281,10 +283,28 @@
         // a future version will store these values in a SharePoint list.
     -->
 
-    <b>Select a sample from this list, or add your URL and JSON to test.</b><br>
+    <b>Select a sample from this list, or add your URL and JSON to test.</b> <span id="ExampleCount"></span><br>
     <select id="testWebServiceSamples" onchange="displayTestWebServiceSample(); return false;">
         <option value="">Samples</option>
-        <optgroup label="Queries">
+        <optgroup label="Basic Queries">
+
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes="Returns site collects for the current user only! Note the 'rowlimit'."
+                    sampleJSON="data.d.query.PrimaryQueryResult.RelevantResults.RowCount"
+                    value="/_api/search/query?querytext='contentclass:sts_site'&selectproperties='SiteId,Path,Title'&trimduplicates=false&rowlimit=1000">
+                List of all Site Collections for current user using search  (No direct REST API).
+            </option>
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes="Returns site collects for the current user only! Note the 'rowlimit'."
+                    sampleJSON="data.d.query.PrimaryQueryResult.RelevantResults.RowCount"
+                    value="/_api/search/query?querytext='contentclass:sts_web'&selectproperties='SiteId,Path,Title'&trimduplicates=false&rowlimit=1000">
+                List of all Web Sites for current user using search  (No direct REST API).
+            </option>
+            
             <option method="GET"
                     body=""
                     headers='{"accept": "application/json; odata=verbose"}'
@@ -459,7 +479,7 @@
                     headers='{"accept": "application/json; odata=verbose"}'
                     notes="Change the querytext in the URL."
                     sampleJSON="data.d.query.PrimaryQueryResult.RelevantResults.RowCount"
-                    value="/_api/search/query?querytext='sharepoint'&selectproperties='Title,Author'&refinementfilters='fileExtension:equals(&quot;docx&quot;)'">
+                    value="/_api/search/query?querytext='sharepoint'&selectproperties='Title,Author'&refinementfilters='fileExtension:equals(&quot;docx&quot;)'&trimduplicates=false&rowlimit=1000">
                 Search
             </option>
             <option method="GET"
@@ -471,6 +491,22 @@
                 People Search
             </option>
         </optgroup>
+
+        <optgroup label="CAML Queries">
+            <option method="POST"
+                    body=''
+                    headers='{"accept": "application/json;odata=verbose",
+                       "content-type": "application/json;odata=verbose",
+	                   "content-length":__len__,
+	                   "X-RequestDigest&quot;: &quot;__yourRequestDigest__"}'
+                    notes="Change the entire query! Or at least the dates for this example."
+                    sampleJSON="data.d.results.length"
+                    value="/_api/web/lists/getbytitle('Documents')/GetItems(query=@v1)?@v1={'ViewXml':'<View><Query><Where><Geq><FieldRef Name=\'Created\' /><Value Type=\'DateTime\'>2018-02-01T10:10:03</Value></Geq></Where></Query></View>'}">
+                CAML Query to find documents by Created date.
+            </option>
+        
+        </optgroup>
+
         <optgroup label="Lists">
             <option method="POST"
                     body='{"__metadata": { "type": "SP.List" },
@@ -499,6 +535,17 @@
                     sampleJSON="data.d.Id"
                     value="/_api/web/lists/GetByTitle('Announcements')/Items">
                 Add a new item to a list
+            </option>
+            <option method="POST"
+                    body=""
+                    headers='{ "accept": "application/json;odata=verbose",
+	                   "content-type": "application/json;odata=verbose",
+	                   "content-length":__len__,
+	                   "X-RequestDigest&quot;: &quot;__yourRequestDigest__"}'
+                    notes="Change the filenames and paths"
+                    sampleJSON="data.d.Id"
+                    value="/sites/workflowtest/_api/web/getfilebyserverrelativeurl('/sites/workflowtest/Shared%20Documents/test.pptx')/copyto(strnewurl='/sites/workflowtest/Shared%20Documents/test2.pptx',boverwrite=false)">
+                Copy a file between libraries
             </option>
             <option method="POST"
                     body='{"__metadata":{"type":"SP.Folder"}, "ServerRelativeUrl": "/document library relative url/folder name"}',
@@ -624,7 +671,7 @@
                     notes="replace 'spdemo\samc' with a user's ID.  For SharePoint Online use something like i:0%23.f|membership|samc@yourdomain.onmicrosoft.com "
                     sampleJSON="data.d.Manager"
                     value="/_api/SP.UserProfiles.PeopleManager/GetUserProfilePropertyFor(accountName=@v,propertyName='Manager')?@v='spdemo\samc'">
-                Get User Profile info about a user's manager.
+                Get User Profile info about a user's manager. (Set "propertyName=" to any User Profile Services property.)
             </option>
         </optgroup>
 
@@ -922,6 +969,8 @@
 
 
     <script>
+        $("#ExampleCount").text( "(" + $("#testWebServiceSamples option").length + " samples)")
+
         // fix for SharePoint/FireFox bug! This is not part of the JSON tester code...
 
         // SharePoint input element bug handler
@@ -930,7 +979,6 @@
 
         var disableFormSubmitDueToBug = false;
         var bugSubmitHandlerAttached = false;
-
 
         $("input[id^='test']").keydown(function(e){
             if(e.keyCode == 13 ) {
