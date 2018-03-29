@@ -1,7 +1,7 @@
 # SharePointRESTtester
 A JavaScript project to use with a Content Editor Web Part to test SharePoint REST API calls and create AJAX sample code and SharePoint Designer 2013 Workflow steps.
 
-Screen captures and a detailed install can be found at:
+Screen captures and a detailed install can be found at: http://techtrainingnotes.blogspot.com/2017/04/a-sharepoint-rest-api-tester-with-ajax.html
 
 
 To use:
