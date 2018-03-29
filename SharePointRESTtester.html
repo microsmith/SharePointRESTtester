@@ -5,13 +5,13 @@
 <script language="javascript">
 
     // Mike Smith
-    // http://techtrainingnotes.blogspot.com/2017/04/a-sharepoint-rest-api-tester-with-ajax.html
+    // http://TechTrainingNotes.blogspot.com
     // 4/13/2017
-    // Copyright (c) 2017,2018 Microsmith, Inc.
+    // Copyright (c) 2017, 2018 Microsmith, Inc.
     // You may use this code for personal use to write and test SP REST or just to study!
     // You may not republish this in another blog, or other format.
     
-    // Last updated: 1/22/18
+    // Last updated: 3/28/18
 
     var testJSONdata;  // data returned from the AJAX call
     var testNID;       // id for SP Notification popup so it can be closed later on
@@ -287,13 +287,12 @@
     <select id="testWebServiceSamples" onchange="displayTestWebServiceSample(); return false;">
         <option value="">Samples</option>
         <optgroup label="Basic Queries">
-
             <option method="GET"
                     body=""
                     headers='{"accept": "application/json; odata=verbose"}'
                     notes="Returns site collects for the current user only! Note the 'rowlimit'."
                     sampleJSON="data.d.query.PrimaryQueryResult.RelevantResults.RowCount"
-                    value="/_api/search/query?querytext='contentclass:sts_site'&selectproperties='SiteId,Path,Title'&trimduplicates=false&rowlimit=1000">
+                    value="/_api/search/query?querytext='contentclass:sts_site'&selectproperties='SiteId,Path,Title'&trimduplicates=true&rowlimit=1000">
                 List of all Site Collections for current user using search  (No direct REST API).
             </option>
             <option method="GET"
@@ -301,7 +300,7 @@
                     headers='{"accept": "application/json; odata=verbose"}'
                     notes="Returns site collects for the current user only! Note the 'rowlimit'."
                     sampleJSON="data.d.query.PrimaryQueryResult.RelevantResults.RowCount"
-                    value="/_api/search/query?querytext='contentclass:sts_web'&selectproperties='SiteId,Path,Title'&trimduplicates=false&rowlimit=1000">
+                    value="/_api/search/query?querytext='contentclass:sts_web'&selectproperties='SiteId,Path,Title'&trimduplicates=true&rowlimit=1000">
                 List of all Web Sites for current user using search  (No direct REST API).
             </option>
             
@@ -313,6 +312,7 @@
                     value="/_api/site">
                 Get information about the current site collection.
             </option>
+            
             <option method="GET"
                     body=""
                     headers='{"accept": "application/json; odata=verbose"}'
@@ -479,7 +479,7 @@
                     headers='{"accept": "application/json; odata=verbose"}'
                     notes="Change the querytext in the URL."
                     sampleJSON="data.d.query.PrimaryQueryResult.RelevantResults.RowCount"
-                    value="/_api/search/query?querytext='sharepoint'&selectproperties='Title,Author'&refinementfilters='fileExtension:equals(&quot;docx&quot;)'&trimduplicates=false&rowlimit=1000">
+                    value="/_api/search/query?querytext='sharepoint'&selectproperties='Title,Author'&refinementfilters='fileExtension:equals(&quot;docx&quot;)'">
                 Search
             </option>
             <option method="GET"
@@ -536,17 +536,17 @@
                     value="/_api/web/lists/GetByTitle('Announcements')/Items">
                 Add a new item to a list
             </option>
-            <option method="POST"
-                    body=""
-                    headers='{ "accept": "application/json;odata=verbose",
-	                   "content-type": "application/json;odata=verbose",
-	                   "content-length":__len__,
-	                   "X-RequestDigest&quot;: &quot;__yourRequestDigest__"}'
-                    notes="Change the filenames and paths"
-                    sampleJSON="data.d.Id"
-                    value="/sites/workflowtest/_api/web/getfilebyserverrelativeurl('/sites/workflowtest/Shared%20Documents/test.pptx')/copyto(strnewurl='/sites/workflowtest/Shared%20Documents/test2.pptx',boverwrite=false)">
-                Copy a file between libraries
-            </option>
+
+
+
+
+
+
+
+
+
+
+
             <option method="POST"
                     body='{"__metadata":{"type":"SP.Folder"}, "ServerRelativeUrl": "/document library relative url/folder name"}',
                     headers='{ "accept": "application/json;odata=verbose",
@@ -708,6 +708,65 @@
                     value="/_api/web/sitegroups?$filter=LoginName eq 'Permissions Test Owners'">
                 Get a list of Site Groups by name.
             </option>
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes="Replace 49 with the site group ID"
+                    sampleJSON="data.d.results[1].LoginName + ' ' + data.d.results[1].Id"
+                    value="/_api/web/sitegroups(49)">
+                Get info about a Site Group. You need the ID.
+            </option>
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes="Replace 49 with the site group ID"
+                    sampleJSON="data.d.results[1].LoginName + ' ' + data.d.results[1].Id"
+                    value="/_api/web/sitegroups(49)/users">
+                Get a list of users in a Site Group.
+            </option>
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes="Replace 49 with the site group ID and 12 with the user id"
+                    sampleJSON="data.d.LoginName + ' ' + data.d.Id"
+                    value="/_api/web/sitegroups(49)/users/getbyid(9)">
+                Get a user by id from a Site Group.
+            </option>            
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes="Replace 49 with the site group ID and 12 with the user id"
+                    sampleJSON="data.d.LoginName + ' ' + data.d.Id"
+                    value="/_api/web/sitegroups(49)/users/getbyemail('mike@yourdomain.onmicrosoft.com')">
+                Get a user by email address from a Site Group.
+            </option>
+            
+            <option method="POST"
+                    body='{ "__metadata": { "type": "SP.User" }, "LoginName":"i:0#.f|membership|susanj@yourDomain.onmicrosoft.com" }'
+                    headers='{ "accept": "application/json;odata=verbose",
+	                   "content-type": "application/json;odata=verbose",
+	                   "content-length":__len__,
+	                   "X-RequestDigest": "__yourRequestDigest__"}'
+                    notes="Replace 49 with the site group ID"
+                    sampleJSON=""
+                    value="/_api/web/sitegroups(49)/users">
+                Add a user to a Site Group by login name.
+            </option>
+            <option method="POST"
+                    body=''
+                    headers='{ "accept": "application/json;odata=verbose",
+	                   "content-type": "application/json;odata=verbose",
+	                   "X-HTTP-Method": "DELETE",
+	                   "If-Match": "*",
+	                   "X-RequestDigest": "__yourRequestDigest__"}'
+                    notes="Replace 49 with the site group ID and the 12 with the user ID"
+                    sampleJSON=""
+                    value="/_api/web/sitegroups(49)/users/getbyid(12)">
+                Remove a user from an Site Group by user ID.
+            </option>
+            
+            
+            
             <option method="GET"
                     body=""
                     headers='{"accept": "application/json; odata=verbose"}'
