@@ -11,7 +11,7 @@
     // You may use this code for personal use to write and test SP REST or just to study!
     // You may not republish this in another blog, or other format.
     
-    // Last updated: 3/28/18
+    // Last updated: 4/3/18
 
     var testJSONdata;  // data returned from the AJAX call
     var testNID;       // id for SP Notification popup so it can be closed later on
@@ -425,6 +425,31 @@
                     value="/_api/web/lists/getbytitle('Documents')/items?$select=FileDirRef,FileLeafRef,Title,Created,Modified">
                 Get all items in a library with filename and path.
             </option>
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes="Change the list name and the filter text. "
+                    sampleJSON="data.d.results.length"
+                    value="/_api/web/lists/getbytitle('Announcements')/items?$filter=Title eq 'Test announcement'">
+                Get a list/library item by property and display the Title.
+            </option>
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes="Change the list/library name and the file name. "
+                    sampleJSON="data.d.results.length"
+                    value="/_api/web/lists/getbytitle('Documents')/Items?$filter=FileLeafRef eq 'AdventureWorksBikes.xlsx'&$select=Title,Id">
+                Get a library item by Filename and display the Title and ID.
+            </option>
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes="Change the list/library name. "
+                    sampleJSON="data.d.results.length"
+                    value="/sites/workflowtest/_api/web/lists/getbytitle('Tasks')/Items/GetById(2)?$select=Title">
+                Get a list/library item by ID and display the Title.
+            </option>
+
             <option method="GET"
                     body=""
                     headers='{"accept": "application/json; odata=verbose"}'
