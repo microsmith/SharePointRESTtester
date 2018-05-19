@@ -1,4 +1,3 @@
-
 <script language="javascript" src="jquery-3.1.0.min.js"></script>
 <!-- delete the previous line if your master page already loads jQuery. -->
 
@@ -6,12 +5,12 @@
 
     // Mike Smith
     // http://TechTrainingNotes.blogspot.com
-    // 4/13/2017
+    // 
     // Copyright (c) 2017, 2018 Microsmith, Inc.
     // You may use this code for personal use to write and test SP REST or just to study!
     // You may not republish this in another blog, or other format.
     
-    // Last updated: 4/3/18
+    // Last updated: 5/17/18
 
     var testJSONdata;  // data returned from the AJAX call
     var testNID;       // id for SP Notification popup so it can be closed later on
@@ -90,7 +89,7 @@
             // display the AJAX script
             var ajaxcallForDisplay = JSON.stringify(ajaxcall, undefined, 4);
 
-            ajaxcallForDisplay =  ajaxcallForDisplay.substring(0,ajaxcallForDisplay.length-2) + ',\n    "success" = successfunction,\n' + '    "error" = errorfunction\n}';
+            ajaxcallForDisplay =  ajaxcallForDisplay.substring(0,ajaxcallForDisplay.length-2) + ',\n    "success" : successfunction,\n' + '    "error" : errorfunction\n}';
             ajaxcallForDisplay = ajaxcallForDisplay.replace(/\\n/g,"");
             ajaxcallForDisplay = ajaxcallForDisplay.replace(/\\"/g,"\"");
             ajaxcallForDisplay = ajaxcallForDisplay.replace(/               /g," ");
@@ -113,6 +112,8 @@
                 var restHeadersText2 = restHeadersText.split(",");
                 restHeadersText2 = restHeadersText2.slice(0,restHeadersText2.length-2)
                 restHeadersText = restHeadersText2.join(",") + " }";
+                
+                $("#testAJAXobjectNote").show();
             }
 
             var headerData = JSON.parse(restHeadersText);
@@ -261,6 +262,13 @@
         color: blue;
         font-weight: bold;
     }
+
+  .ttnOptGroup {
+      color:#0000FF!important;
+  }
+  .ttnOptGroup option {
+      color:black;
+  } 
 </style>
 
 
@@ -286,7 +294,39 @@
     <b>Select a sample from this list, or add your URL and JSON to test.</b> <span id="ExampleCount"></span><br>
     <select id="testWebServiceSamples" onchange="displayTestWebServiceSample(); return false;">
         <option value="">Samples</option>
-        <optgroup label="Basic Queries">
+        <optgroup class="ttnOptGroup"  label="Search Queries (/_api/search/query)">
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes="Change the querytext, StartRow and RowLimit in the URL. (Max of 500 rows per query!)"
+                    sampleJSON="data.d.query.PrimaryQueryResult.RelevantResults.RowCount"
+                    value="/_api/search/query?querytext='sharepoint'&selectproperties='Title,Author'&StartRow=1&RowLimit=100">
+                Keyword Search
+            </option>
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes="Change the querytext in the URL."
+                    sampleJSON="data.d.query.PrimaryQueryResult.RelevantResults.RowCount"
+                    value="/_api/search/query?querytext='sharepoint'&selectproperties='Title,Author'&refinementfilters='fileExtension:equals(&quot;docx&quot;)'&StartRow=1&RowLimit=100">
+                Keyword Search with refinement filters (this one for file type)
+            </option>
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes="Change the querytext in the URL."
+                    sampleJSON="data.d.query.PrimaryQueryResult.RelevantResults.RowCount"
+                    value="/_api/search/query?querytext='sharepoint'&selectproperties='Title,Author'&refinementfilters='or(fileExtension:equals(&quot;docx&quot;),fileExtension:equals(&quot;pptx&quot;))'&StartRow=1&RowLimit=100">
+                Keyword Search with OR'd refinement filters (ANDs are similar)
+            </option>
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes="Change the querytext in the URL. The SourceId GUID represents the People content source."
+                    sampleJSON="data.d.query.PrimaryQueryResult.RelevantResults.RowCount   // or data.d.query.PrimaryQueryResult.RelevantResults.Table.Rows.results.length"
+                    value="/_api/search/query?querytext='*'&sourceid='B09A7990-05EA-4AF9-81EF-EDFAB16C4E31'&rowlimit=100&selectproperties='PreferredName,Birthday'">
+                People Search
+            </option>
             <option method="GET"
                     body=""
                     headers='{"accept": "application/json; odata=verbose"}'
@@ -303,40 +343,9 @@
                     value="/_api/search/query?querytext='contentclass:sts_web'&selectproperties='SiteId,Path,Title'&trimduplicates=true&rowlimit=1000">
                 List of all Web Sites for current user using search  (No direct REST API).
             </option>
-            
-            <option method="GET"
-                    body=""
-                    headers='{"accept": "application/json; odata=verbose"}'
-                    notes=""
-                    sampleJSON="data.d.PrimaryUri"
-                    value="/_api/site">
-                Get information about the current site collection.
-            </option>
-            
-            <option method="GET"
-                    body=""
-                    headers='{"accept": "application/json; odata=verbose"}'
-                    notes=""
-                    sampleJSON="data.d.Created"
-                    value="/_api/web">
-                Get information about the current web.
-            </option>
-            <option method="GET"
-                    body=""
-                    headers='{"accept": "application/json; odata=verbose"}'
-                    notes=""
-                    sampleJSON="data.d.LocaleId"
-                    value="/_api/web/RegionalSettings">
-                Get the Regional Settings for the current web.
-            </option>
-            <option method="GET"
-                    body=""
-                    headers='{"accept": "application/json; odata=verbose"}'
-                    notes=""
-                    sampleJSON="data.d.Description"
-                    value="/_api/web/RegionalSettings/TimeZone">
-                Get the Time Zone for the current web.
-            </option>
+        </optgroup>
+
+        <optgroup class="ttnOptGroup"  label="Misc REST Queries">
             <option method="GET"
                     body=""
                     headers='{"accept": "application/json; odata=verbose"}'
@@ -345,54 +354,23 @@
                     value="/_api/web/RegionalSettings/TimeZones">
                 Get SharePoint's list of Time Zones.
             </option>
-            <option method="GET"
-                    body=""
-                    headers='{"accept": "application/json; odata=verbose"}'
-                    notes=""
-                    sampleJSON="data.d.results[0].Title"
-                    value="/_api/web/webs?$select=Title,Url">
-                Get a list of all webs below the current web.
-            </option>
-            <option method="GET"
-                    body=""
-                    headers='{"accept": "application/json; odata=verbose"}'
-                    notes=""
-                    sampleJSON="data.d.Email"
-                    value="/_api/site/Owner">
-                Get the primary site collection administrator (Owner).
-            </option>
-            <option method="GET"
-                    body=""
-                    headers='{"accept": "application/json; odata=verbose"}'
-                    notes=""
-                    sampleJSON="data.d.Email"
-                    value="/_api/site/SecondaryContact">
-                Get the primary site collection Secondary Contact.
-            </option>
-            <option method="GET"
-                    body=""
-                    headers='{"accept": "application/json; odata=verbose"}'
-                    notes=""
-                    sampleJSON="((new Date())- (new Date( data.d.LastItemUserModifiedDate))) / 86400000 + ' days'"
-                    value="/_api/web?$select=LastItemModifiedDate,LastItemUserModifiedDate">
-                Get a web's LastItemModifiedDate
-            </option>
-            <option method="GET"
-                    body=""
-                    headers='{"accept": "application/json; odata=verbose"}'
-                    notes=""
+        </optgroup>
+
+        <optgroup class="ttnOptGroup"  label="CAML Queries">
+            <option method="POST"
+                    body=''
+                    headers='{"accept": "application/json;odata=verbose",
+                       "content-type": "application/json;odata=verbose",
+	                   "content-length":__len__,
+	                   "X-RequestDigest&quot;: &quot;__yourRequestDigest__"}'
+                    notes="Change the entire query! Or at least the dates for this example."
                     sampleJSON="data.d.results.length"
-                    value="/_api/web/lists">
-                Get a list of lists from the current web. (all data)
+                    value="/_api/web/lists/getbytitle('Documents')/GetItems(query=@v1)?@v1={'ViewXml':'<View><Query><Where><Geq><FieldRef Name=\'Created\' /><Value Type=\'DateTime\'>2018-02-01T10:10:03</Value></Geq></Where></Query></View>'}">
+                CAML Query to find documents by Created date.
             </option>
-            <option method="GET"
-                    body=""
-                    headers='{"accept": "application/json; odata=verbose"}'
-                    notes=""
-                    sampleJSON="data.d.results.length"
-                    value="/_api/web/lists?$select=Title">
-                Get a list of lists from the current web. (Just the title)
-            </option>
+        </optgroup>
+
+        <<optgroup class="ttnOptGroup"  label="List items and documents">
             <option method="GET"
                     body=""
                     headers='{"accept": "application/json; odata=verbose"}'
@@ -453,6 +431,17 @@
             <option method="GET"
                     body=""
                     headers='{"accept": "application/json; odata=verbose"}'
+                    notes="Change the library name. Date must be yyyy-mm-ddT00:00:00"
+                    sampleJSON="data.d.results.length"
+                    value="/_api/web/lists/getbytitle('Documents')/items?$select=Title&$filter=Created gt datetime'2016-8-6T00:00:00'">
+                Get all items in a list/library filtered by date.
+            </option>
+        </optgroup>
+
+        <optgroup class="ttnOptGroup"  label="Folders">
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
                     notes="Change the site, list and folder names."
                     sampleJSON="data.d.ItemCount"
                     value="/_api/web/getfolderbyserverrelativeurl('/sites/yourSite/Lists/yourList/yourFolder')">
@@ -469,70 +458,30 @@
             <option method="GET"
                     body=""
                     headers='{"accept": "application/json; odata=verbose"}'
-                    notes="Change the library name. Date must be yyyy-mm-ddT00:00:00"
-                    sampleJSON="data.d.results.length"
-                    value="/_api/web/lists/getbytitle('Documents')/items?$select=Title&$filter=Created gt datetime'2016-8-6T00:00:00'">
-                Get all items in a list/library filtered by date.
-            </option>
-            <option method="GET"
-                    body=""
-                    headers='{"accept": "application/json; odata=verbose"}'
-                    notes=""
-                    sampleJSON="data.d.results.length"
-                    value="/_api/web/Recyclebin">
-                Get all items in web level recycle bin.
-            </option>
-            <option method="GET"
-                    body=""
-                    headers='{"accept": "application/json; odata=verbose"}'
-                    notes=""
-                    sampleJSON="data.d.results.length"
-                    value="/_api/web/RecycleBin?$select=LeafName,DeletedByName,DeletedDateLocalFormatted">
-                Get selected properties of all items in web level recycle bin.
-            </option>
-            <option method="GET"
-                    body=""
-                    headers='{"accept": "application/json; odata=verbose"}'
                     notes="Change the library name"
                     sampleJSON="data.d.results.length"
                     value="/_api/web/lists/getbytitle('Documents')/items?$select=Title&$filter=Created gt datetime'2016-8-6T00:00:00'">
                 Get all items in a list/library filtered by a range of dates.
             </option>
-
-            <option method="GET"
-                    body=""
-                    headers='{"accept": "application/json; odata=verbose"}'
-                    notes="Change the querytext in the URL."
-                    sampleJSON="data.d.query.PrimaryQueryResult.RelevantResults.RowCount"
-                    value="/_api/search/query?querytext='sharepoint'&selectproperties='Title,Author'&refinementfilters='fileExtension:equals(&quot;docx&quot;)'">
-                Search
-            </option>
-            <option method="GET"
-                    body=""
-                    headers='{"accept": "application/json; odata=verbose"}'
-                    notes="Change the querytext in the URL. The SourceId GUID represents the People content source."
-                    sampleJSON="data.d.query.PrimaryQueryResult.RelevantResults.RowCount   // or data.d.query.PrimaryQueryResult.RelevantResults.Table.Rows.results.length"
-                    value="/_api/search/query?querytext='*'&sourceid='B09A7990-05EA-4AF9-81EF-EDFAB16C4E31'&rowlimit=100&selectproperties='PreferredName,Birthday'">
-                People Search
-            </option>
         </optgroup>
 
-        <optgroup label="CAML Queries">
-            <option method="POST"
-                    body=''
-                    headers='{"accept": "application/json;odata=verbose",
-                       "content-type": "application/json;odata=verbose",
-	                   "content-length":__len__,
-	                   "X-RequestDigest&quot;: &quot;__yourRequestDigest__"}'
-                    notes="Change the entire query! Or at least the dates for this example."
+        <optgroup class="ttnOptGroup"  label="Lists">
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes=""
                     sampleJSON="data.d.results.length"
-                    value="/_api/web/lists/getbytitle('Documents')/GetItems(query=@v1)?@v1={'ViewXml':'<View><Query><Where><Geq><FieldRef Name=\'Created\' /><Value Type=\'DateTime\'>2018-02-01T10:10:03</Value></Geq></Where></Query></View>'}">
-                CAML Query to find documents by Created date.
+                    value="/_api/web/lists">
+                Get a list of lists from the current web. (all data)
             </option>
-        
-        </optgroup>
-
-        <optgroup label="Lists">
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes=""
+                    sampleJSON="data.d.results.length"
+                    value="/_api/web/lists?$select=Title">
+                Get a list of lists from the current web. (Just the title)
+            </option>
             <option method="POST"
                     body='{"__metadata": { "type": "SP.List" },
 	               "AllowContentTypes": true,
@@ -602,6 +551,18 @@
 	                   "X-HTTP-Method": "DELETE",
 	                   "If-Match": "*",
 	                   "X-RequestDigest": "__yourRequestDigest__"}'
+                    notes="Change the list title, item ID! DELETE does not return any data. The item is NOT sent to the Recyle Bin! To send to the Recycle Bin add /recycle(). For more info on eTags and If-Match see: https://blogs.msdn.microsoft.com/uksharepoint/2013/02/22/manipulating-list-items-in-sharepoint-hosted-apps-using-the-rest-api/"
+                    sampleJSON="data.d.Id"
+                    value="/_api/web/getfilebyserverrelativeurl('/sites/workflowtest/Shared%20Documents/AirplaneLogo.jpg')">
+                Delete an item from a list using its URL
+            </option>
+            <option method="POST"
+                    body=""
+                    headers='{ "accept": "application/json;odata=verbose",
+	                   "content-type": "application/json;odata=verbose",
+	                   "X-HTTP-Method": "DELETE",
+	                   "If-Match": "*",
+	                   "X-RequestDigest": "__yourRequestDigest__"}'
                     notes="Change the list title, item ID! DELETE does not return any data. For more info on eTags and If-Match see: https://blogs.msdn.microsoft.com/uksharepoint/2013/02/22/manipulating-list-items-in-sharepoint-hosted-apps-using-the-rest-api/"
                     sampleJSON="data.d.Id"
                     value="/_api/web/lists/GetByTitle('Announcements')/Items(1)/recycle()">
@@ -641,8 +602,122 @@
                     value="/_api/web/lists/GetByTitle('Announcements')/recycle()">
                 Delete a list to the Recycle Bin
             </option>
+            <option method="POST"
+                    body='{"__metadata":{"type":"SP.Data.Shared_x0020_DocumentsItem"},
+                           "Title":"TestToysDocs", "FileLeafRef":"TestToysDocs" }'
+                    headers='{ "accept": "application/json;odata=verbose",
+                       "content-type": "application/json;odata=verbose",
+                       "X-HTTP-Method": "MERGE",
+                       "If-Match":  "*",
+                       "content-length":__len__,
+                       "X-RequestDigest": "__yourRequestDigest__"}'
+                    notes="Update the URL to select the folder, and update the Body to supply the new names."
+                    sampleJSON="data.d.Id"
+                    value="/_api/web/GetFolderByServerRelativeUrl('Shared Documents/Toys')/ListItemAllFields">
+                Rename a folder
+            </option>
         </optgroup>
-        <optgroup label="Sites">
+
+        <optgroup class="ttnOptGroup"  label="Recycle Bins">
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes=""
+                    sampleJSON="data.d.results.length"
+                    value="/_api/web/Recyclebin">
+                Get all items in web level recycle bin.
+            </option>
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes=""
+                    sampleJSON="data.d.results.length"
+                    value="/_api/web/RecycleBin?$select=LeafName,DeletedByName,DeletedDateLocalFormatted">
+                Get selected properties of all items in web level recycle bin.
+            </option>
+        </optgroup>
+
+
+
+        <optgroup class="ttnOptGroup"  label="Site Collections">
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes=""
+                    sampleJSON="data.d.PrimaryUri"
+                    value="/_api/site">
+                Get information about the current site collection.
+            </option>
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes=""
+                    sampleJSON="data.d.Email"
+                    value="/_api/site/Owner">
+                Get the primary site collection administrator (Owner).
+            </option>
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes=""
+                    sampleJSON="data.d.Email"
+                    value="/_api/site/SecondaryContact">
+                Get the primary site collection Secondary Contact.
+            </option>
+           
+        </optgroup>
+
+
+        <optgroup class="ttnOptGroup"  label="Webs (subsites)">
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes=""
+                    sampleJSON="data.d.Created"
+                    value="/_api/web">
+                Get information about the current web.
+            </option>
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes=""
+                    sampleJSON="data.d.LocaleId"
+                    value="/_api/web/RegionalSettings">
+                Get the Regional Settings for the current web.
+            </option>
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes=""
+                    sampleJSON="data.d.Description"
+                    value="/_api/web/RegionalSettings/TimeZone">
+                Get the Time Zone for the current web.
+            </option>
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes="for a list of perperties see: https://msdn.microsoft.com/en-us/library/office/dn499819.aspx"
+                    sampleJSON="data.d.results[0].Title"
+                    value="/_api/web/webs?$select=Title,Url">
+                Get a list of all webs below the current web.
+            </option>            
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes=""
+                    sampleJSON="data.d.results[0].Title"
+                    value="/_api/web/webinfos">
+                Get a list of all webs below the current web using "webinfos".
+            </option>
+            
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes=""
+                    sampleJSON="((new Date())- (new Date( data.d.LastItemUserModifiedDate))) / 86400000 + ' days'"
+                    value="/_api/web?$select=LastItemModifiedDate,LastItemUserModifiedDate">
+                Get a web's LastItemModifiedDate
+            </option>
             <option method="POST"
                     body='{"parameters":{ "__metadata":{"type":"SP.WebInfoCreationInformation"},
 	               "Url":"testsub",
@@ -673,7 +748,7 @@
             </option>
         </optgroup>
 
-        <optgroup label="User Profiles">
+        <optgroup class="ttnOptGroup"  label="User Profiles">
             <option method="GET"
                     body=""
                     headers='{"accept": "application/json; odata=verbose"}'
@@ -700,7 +775,7 @@
             </option>
         </optgroup>
 
-        <optgroup label="Permissions">
+        <optgroup class="ttnOptGroup"  label="Permissions">
             <option method="GET"
                     body=""
                     headers='{"accept": "application/json; odata=verbose"}'
@@ -731,7 +806,7 @@
                     notes="Name text is case sensitive!"
                     sampleJSON="data.d.results[1].LoginName + ' ' + data.d.results[1].Id"
                     value="/_api/web/sitegroups?$filter=LoginName eq 'Permissions Test Owners'">
-                Get a list of Site Groups by name.
+                Get a list of Site Groups by name (filter).
             </option>
             <option method="GET"
                     body=""
@@ -739,8 +814,16 @@
                     notes="Replace 49 with the site group ID"
                     sampleJSON="data.d.results[1].LoginName + ' ' + data.d.results[1].Id"
                     value="/_api/web/sitegroups(49)">
-                Get info about a Site Group. You need the ID.
+                Get info about a Site Group using the ID.
             </option>
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes="Replace 49 with the site group ID"
+                    sampleJSON="data.d.results[1].LoginName + ' ' + data.d.results[1].Id"
+                    value="/_api/web/sitegroups/getbyname('Training Members')">
+                Get info about a Site Group using the Name.
+            </option>            
             <option method="GET"
                     body=""
                     headers='{"accept": "application/json; odata=verbose"}'
@@ -760,10 +843,26 @@
             <option method="GET"
                     body=""
                     headers='{"accept": "application/json; odata=verbose"}'
-                    notes="Replace 49 with the site group ID and 12 with the user id"
+                    notes="Replace 49 with the site group ID and user email"
                     sampleJSON="data.d.LoginName + ' ' + data.d.Id"
                     value="/_api/web/sitegroups(49)/users/getbyemail('mike@yourdomain.onmicrosoft.com')">
-                Get a user by email address from a Site Group.
+                Get a user by email address from a Site Group by ID.
+            </option>
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes="Replace group name and the user email"
+                    sampleJSON="data.d.LoginName + ' ' + data.d.Id"
+                    value="/_api/web/sitegroups/getbyname('Training Members')/users/getbyemail('mike@yourdomain.onmicrosoft.com')">
+                Get a user by email address from a Site Group by Name.
+            </option>
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes="Replace group name and the user name"
+                    sampleJSON="data.d.LoginName + ' ' + data.d.Id"
+                    value="/_api/web/sitegroups/getbyname('Training Members')/users?$filter=substringof('sam',Email)">
+                Get a user by partial email address from a Site Group by Name.
             </option>
             
             <option method="POST"
@@ -851,7 +950,7 @@
                 Remove permissions (Role Assignment) on a list.
             </option>
         </optgroup>
-        <optgroup label="Filter Select and OrderBy">
+        <optgroup class="ttnOptGroup"  label="Filter Select and OrderBy">
             <option method="GET"
                     body=""
                     headers='{"accept": "application/json; odata=verbose"}'
@@ -863,7 +962,7 @@
 
 
         </optgroup>
-        <optgroup label="SharePoint 2010 style REST - _vti_bin/ListData.svc">
+        <optgroup class="ttnOptGroup"  label="SharePoint 2010 style REST - _vti_bin/ListData.svc">
             <option method="GET"
                     body=""
                     headers='{"accept": "application/json; odata=verbose"}'
@@ -955,6 +1054,9 @@
             <!-- the AJAX code to use in web part and apps -->
             AJAX JavaScript Code:  <i>(Update with your parameters!)</i><br>
             <div id="testAJAXobject" class="ttnResultDiv" style="">&nbsp;</div>
+            <div id="testAJAXobjectNote" style="display:none">
+            <br>Note: If this code is in a SharePoint page, you can get the RequestDigest using $(&quot;#__REQUESTDIGEST&quot;).val()
+            </div>
             <br><br><br>
 
         </div>
