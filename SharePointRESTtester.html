@@ -12,6 +12,8 @@
     
     // Last updated: 5/17/18
 
+    // metadata info: /_vti_bin/Client.svc/$metadata
+
     var testJSONdata;  // data returned from the AJAX call
     var testNID;       // id for SP Notification popup so it can be closed later on
 
@@ -278,7 +280,8 @@
 
     <h2>SharePoint 2013 and later REST Tester!  (SharePointRESTtester)</h2><br>
     This tool is used to build and test the REST API for SharePoint 2013 and later. It currently only supports JSON data and not XML.<br>
-    For info see <a href="http://TechTrainingNotes.blogspot.com">Tech Training Notes blog</a> or <a href="https://github.com/microsmith/SharePointRESTtester">GitHub</a>. <br><br>
+    For info see <a href="http://TechTrainingNotes.blogspot.com">Tech Training Notes blog</a> or <a href="https://github.com/microsmith/SharePointRESTtester">GitHub</a>. 
+    <a href="/_vti_bin/Client.svc/$metadata" target="_new">SharePoint REST metadata</a> from your farm.<br><br>
 
     <!--
         // The following SELECT is the Sample list
@@ -354,6 +357,14 @@
                     value="/_api/web/RegionalSettings/TimeZones">
                 Get SharePoint's list of Time Zones.
             </option>
+            <option method="POST"
+                    body=''
+                    headers='{"accept": "application/json;odata=verbose"}'
+                    notes="Must be a POST."
+                    sampleJSON="data.d.results.length"
+                    value="/_api/contextinfo">
+                Get Context info.
+            </option>
         </optgroup>
 
         <optgroup class="ttnOptGroup"  label="CAML Queries">
@@ -392,7 +403,7 @@
                     headers='{"accept": "application/json; odata=verbose"}'
                     notes="Change the library name"
                     sampleJSON="data.d.results.length"
-                    value="/_api/web/lists/getbytitle('Documents')/items?$select=Title">
+                    value="/_api/web/lists/getbytitle('Documents')/items?$select=FileDirRef,FileDirRef,Title">
                 Get all items in a list/library.
             </option>
             <option method="GET"
@@ -419,6 +430,14 @@
                     value="/_api/web/lists/getbytitle('Documents')/Items?$filter=FileLeafRef eq 'AdventureWorksBikes.xlsx'&$select=Title,Id">
                 Get a library item by Filename and display the Title and ID.
             </option>
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes="Change the list/library name and the file name. "
+                    sampleJSON="data.d.results.length"
+                    value="/_api/web/GetFileByServerRelativeUrl('/sites/training/demoworkflow/shared documents/AdventureWorksBikes.xlsx')/$value">
+                Download a file. 
+            </option>            
             <option method="GET"
                     body=""
                     headers='{"accept": "application/json; odata=verbose"}'
@@ -482,6 +501,30 @@
                     value="/_api/web/lists?$select=Title">
                 Get a list of lists from the current web. (Just the title)
             </option>
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes=""
+                    sampleJSON="data.d.results.length"
+                    value="/_api/Web/ContentTypes">
+                Get a list of Content Types for the current web. 
+            </option>
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes=""
+                    sampleJSON="data.d.results.length"
+                    value="/_api/web/lists/getbytitle('Documents')/Fields?$select=Title,InternalName,FieldTypeKind,Formula,Hidden,Indexed">
+                Get a list of list columns. (Title,InternalName,FieldTypeKind,Formula,Hidden,Indexed)
+            </option>
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes="(For FieldTypeKind IDs see: <a href='https://msdn.microsoft.com/en-us/library/office/microsoft.sharepoint.client.fieldtype.aspx'>https://msdn.microsoft.com/en-us/library/office/microsoft.sharepoint.client.fieldtype.aspx</a>)"
+                    sampleJSON="data.d.results.length"
+                    value="/_api/web/lists/getbytitle('Documents')/Fields?$filter=FieldTypeKind eq 17&$select=Title,FieldTypeKind,Formula">
+                Get a list of list columns by type. This one returns Calculated Columns. 
+            </option>
             <option method="POST"
                     body='{"__metadata": { "type": "SP.List" },
 	               "AllowContentTypes": true,
@@ -510,16 +553,6 @@
                     value="/_api/web/lists/GetByTitle('Announcements')/Items">
                 Add a new item to a list
             </option>
-
-
-
-
-
-
-
-
-
-
 
             <option method="POST"
                     body='{"__metadata":{"type":"SP.Folder"}, "ServerRelativeUrl": "/document library relative url/folder name"}',
@@ -647,6 +680,14 @@
                     sampleJSON="data.d.PrimaryUri"
                     value="/_api/site">
                 Get information about the current site collection.
+            </option>
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes=""
+                    sampleJSON="data.d.PrimaryUri"
+                    value="/_api/site/usage">
+                Get the size of the content in the current site collection.
             </option>
             <option method="GET"
                     body=""
@@ -889,8 +930,6 @@
                 Remove a user from an Site Group by user ID.
             </option>
             
-            
-            
             <option method="GET"
                     body=""
                     headers='{"accept": "application/json; odata=verbose"}'
@@ -962,6 +1001,9 @@
 
 
         </optgroup>
+
+
+
         <optgroup class="ttnOptGroup"  label="SharePoint 2010 style REST - _vti_bin/ListData.svc">
             <option method="GET"
                     body=""
@@ -997,7 +1039,9 @@
     <!-- URL, Method, Headers and Body -->
     <table>
         <tr><td><b>URL:</b>    </td><td><input type="text" id="testWebServiceURL" style="width:500px" /></td></tr>
-        <tr><td><b>Method:</b> </td><td><input type="text" id="testWebServiceMethod" style="width:50px" /></td></tr>
+        <tr><td><b>Method:</b> </td><td><input type="text" id="testWebServiceMethod" style="width:50px" /><br>
+        ODATA options:  odata=verbose, odata=nometadata, odata=minimalmetadata
+        </td></tr>
         <tr><td><b>Headers:</b></td><td><textarea rows="1" cols="60" id="testWebServiceHeaders" style="width:600px"></textarea> </td></tr>
         <tr><td><b>Body:</b><br>Must use single quotes!</td><td><textarea rows="1" cols="60" id="testWebServiceBody" style="width:600px"></textarea></td></tr>
     </table>
