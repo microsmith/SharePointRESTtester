@@ -374,10 +374,21 @@
                        "content-type": "application/json;odata=verbose",
 	                   "content-length":__len__,
 	                   "X-RequestDigest&quot;: &quot;__yourRequestDigest__"}'
-                    notes="Change the entire query! Or at least the dates for this example."
+                    notes="Change the entire query! Or at least the dates for this example. CAML queries must be sent as a POST."
                     sampleJSON="data.d.results.length"
                     value="/_api/web/lists/getbytitle('Documents')/GetItems(query=@v1)?@v1={'ViewXml':'<View><Query><Where><Geq><FieldRef Name=\'Created\' /><Value Type=\'DateTime\'>2018-02-01T10:10:03</Value></Geq></Where></Query></View>'}">
                 CAML Query to find documents by Created date.
+            </option>
+            <option method="POST"
+                    body=''
+                    headers='{"accept": "application/json;odata=verbose",
+                       "content-type": "application/json;odata=verbose",
+	                   "content-length":__len__,
+	                   "X-RequestDigest&quot;: &quot;__yourRequestDigest__"}'
+                    notes="Change the entire query! Or at least the dates for this example. CAML queries must be sent as a POST."
+                    sampleJSON="data.d.results.length"
+                    value="/_api/web/lists/getbytitle('Documents')/GetItems(query=@v1)?@v1={'ViewXml':'<View Scope=\'RecursiveAll\'><Query><Where><Eq><FieldRef Name=\'FSObjType\' /><Value Type=\'LookUp\'>1</Value></Eq></Where></Query></View>'}&$select=FileDirRef,fileleafref">
+                CAML Query to return all folders in a library. Uses FSObjType=1 and CAML recursive.
             </option>
         </optgroup>
 
@@ -433,20 +444,11 @@
             <option method="GET"
                     body=""
                     headers='{"accept": "application/json; odata=verbose"}'
-                    notes="Change the list/library name and the file name. "
-                    sampleJSON="data.d.results.length"
-                    value="/_api/web/GetFileByServerRelativeUrl('/sites/training/demoworkflow/shared documents/AdventureWorksBikes.xlsx')/$value">
-                Download a file. 
-            </option>            
-            <option method="GET"
-                    body=""
-                    headers='{"accept": "application/json; odata=verbose"}'
                     notes="Change the list/library name. "
                     sampleJSON="data.d.results.length"
                     value="/sites/workflowtest/_api/web/lists/getbytitle('Tasks')/Items/GetById(2)?$select=Title">
                 Get a list/library item by ID and display the Title.
             </option>
-
             <option method="GET"
                     body=""
                     headers='{"accept": "application/json; odata=verbose"}'
@@ -455,9 +457,88 @@
                     value="/_api/web/lists/getbytitle('Documents')/items?$select=Title&$filter=Created gt datetime'2016-8-6T00:00:00'">
                 Get all items in a list/library filtered by date.
             </option>
+            <option method="POST"
+                    body='{"__metadata":{"type":"SP.Data.AnnouncementsListItem"},
+	                "Title":"Test announcement", "Body":"hello!" }'
+                    headers='{ "accept": "application/json;odata=verbose",
+	                   "content-type": "application/json;odata=verbose",
+	                   "content-length":__len__,
+	                   "X-RequestDigest&quot;: &quot;__yourRequestDigest__"}'
+                    notes="Change the list title, the SP.Data.type and the item data!"
+                    sampleJSON="data.d.Id"
+                    value="/_api/web/lists/GetByTitle('Announcements')/Items">
+                Add a new item to a list
+            </option>
+            <option method="POST"
+                    body=""
+                    headers='{ "accept": "application/json;odata=verbose",
+	                   "content-type": "application/json;odata=verbose",
+	                   "X-HTTP-Method": "DELETE",
+	                   "If-Match": "*",
+	                   "X-RequestDigest": "__yourRequestDigest__"}'
+                    notes="Change the list title, item ID! DELETE does not return any data. For more info on eTags and If-Match see: https://blogs.msdn.microsoft.com/uksharepoint/2013/02/22/manipulating-list-items-in-sharepoint-hosted-apps-using-the-rest-api/"
+                    sampleJSON="data.d.Id"
+                    value="/_api/web/lists/GetByTitle('Announcements')/Items(1)">
+                Delete an item from a list using ID
+            </option>
+            <option method="POST"
+                    body=""
+                    headers='{ "accept": "application/json;odata=verbose",
+	                   "content-type": "application/json;odata=verbose",
+	                   "X-HTTP-Method": "DELETE",
+	                   "If-Match": "*",
+	                   "X-RequestDigest": "__yourRequestDigest__"}'
+                    notes="Change the list title, item ID! DELETE does not return any data. The item is NOT sent to the Recyle Bin! To send to the Recycle Bin add /recycle(). For more info on eTags and If-Match see: https://blogs.msdn.microsoft.com/uksharepoint/2013/02/22/manipulating-list-items-in-sharepoint-hosted-apps-using-the-rest-api/"
+                    sampleJSON="data.d.Id"
+                    value="/_api/web/getfilebyserverrelativeurl('/sites/workflowtest/Shared%20Documents/AirplaneLogo.jpg')">
+                Delete an item from a list using its URL
+            </option>
+            <option method="POST"
+                    body=""
+                    headers='{ "accept": "application/json;odata=verbose",
+	                   "content-type": "application/json;odata=verbose",
+	                   "X-HTTP-Method": "DELETE",
+	                   "If-Match": "*",
+	                   "X-RequestDigest": "__yourRequestDigest__"}'
+                    notes="Change the list title, item ID! DELETE does not return any data. For more info on eTags and If-Match see: https://blogs.msdn.microsoft.com/uksharepoint/2013/02/22/manipulating-list-items-in-sharepoint-hosted-apps-using-the-rest-api/"
+                    sampleJSON="data.d.Id"
+                    value="/_api/web/lists/GetByTitle('Announcements')/Items(1)/recycle()">
+                Delete an item, to the Recycle Bin, from a list using ID
+            </option>
+            <option method="POST"
+                    body='{ "__metadata": { "type": "SP.ListItem" }, "Title": "New title" }'
+                    headers='{ "accept": "application/json;odata=verbose",
+	                   "content-type": "application/json;odata=verbose",
+	                   "X-HTTP-Method": "MERGE",
+	                   "If-Match": "*",
+	                   "X-RequestDigest": "__yourRequestDigest__"}'
+                    notes="Change the list title, item ID! DELETE does not return any data. For more info on eTags and If-Match see: https://blogs.msdn.microsoft.com/uksharepoint/2013/02/22/manipulating-list-items-in-sharepoint-hosted-apps-using-the-rest-api/"
+                    sampleJSON="data.d.Id"
+                    value="/_api/web/lists/GetByTitle('Announcements')/Items(1)">
+                Update an item using ID
+            </option>
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes="Change the list/library name and the file name. "
+                    sampleJSON="data.d.results.length"
+                    value="/_api/web/GetFileByServerRelativeUrl('/sites/training/demoworkflow/shared documents/AdventureWorksBikes.xlsx')/$value">
+                Download a file. 
+            </option>            
         </optgroup>
 
         <optgroup class="ttnOptGroup"  label="Folders">
+            <option method="POST"
+                    body=''
+                    headers='{"accept": "application/json;odata=verbose",
+                       "content-type": "application/json;odata=verbose",
+	                   "content-length":__len__,
+	                   "X-RequestDigest&quot;: &quot;__yourRequestDigest__"}'
+                    notes="Change the entire query! Or at least the dates for this example. CAML queries must be sent as a POST."
+                    sampleJSON="data.d.results.length"
+                    value="/_api/web/lists/getbytitle('Documents')/GetItems(query=@v1)?@v1={'ViewXml':'<View Scope=\'RecursiveAll\'><Query><Where><Eq><FieldRef Name=\'FSObjType\' /><Value Type=\'LookUp\'>1</Value></Eq></Where></Query></View>'}&$select=FileDirRef,fileleafref">
+                CAML Query to return all folders in a library. Uses FSObjType=1 and CAML recursive.
+            </option>
             <option method="GET"
                     body=""
                     headers='{"accept": "application/json; odata=verbose"}'
@@ -474,13 +555,19 @@
                     value="/_api/web/getfolderbyserverrelativeurl('/sites/yourSite/Lists/yourList/yourFolder')/itemcount">
                 Get a count of items in a list folder.
             </option>
-            <option method="GET"
-                    body=""
-                    headers='{"accept": "application/json; odata=verbose"}'
-                    notes="Change the library name"
-                    sampleJSON="data.d.results.length"
-                    value="/_api/web/lists/getbytitle('Documents')/items?$select=Title&$filter=Created gt datetime'2016-8-6T00:00:00'">
-                Get all items in a list/library filtered by a range of dates.
+            <option method="POST"
+                    body='{"__metadata":{"type":"SP.Data.Shared_x0020_DocumentsItem"},
+                           "Title":"TestToysDocs", "FileLeafRef":"TestToysDocs" }'
+                    headers='{ "accept": "application/json;odata=verbose",
+                       "content-type": "application/json;odata=verbose",
+                       "X-HTTP-Method": "MERGE",
+                       "If-Match":  "*",
+                       "content-length":__len__,
+                       "X-RequestDigest": "__yourRequestDigest__"}'
+                    notes="Update the URL to select the folder, and update the Body to supply the new names."
+                    sampleJSON="data.d.Id"
+                    value="/_api/web/GetFolderByServerRelativeUrl('Shared Documents/Toys')/ListItemAllFields">
+                Rename a folder
             </option>
         </optgroup>
 
@@ -541,18 +628,6 @@
                     value="/_api/web/lists">
                 Create a new list
             </option>
-            <option method="POST"
-                    body='{"__metadata":{"type":"SP.Data.AnnouncementsListItem"},
-	                "Title":"Test announcement", "Body":"hello!" }'
-                    headers='{ "accept": "application/json;odata=verbose",
-	                   "content-type": "application/json;odata=verbose",
-	                   "content-length":__len__,
-	                   "X-RequestDigest&quot;: &quot;__yourRequestDigest__"}'
-                    notes="Change the list title, the SP.Data.type and the item data!"
-                    sampleJSON="data.d.Id"
-                    value="/_api/web/lists/GetByTitle('Announcements')/Items">
-                Add a new item to a list
-            </option>
 
             <option method="POST"
                     body='{"__metadata":{"type":"SP.Folder"}, "ServerRelativeUrl": "/document library relative url/folder name"}',
@@ -564,54 +639,6 @@
                     sampleJSON="data.d.Id"
                     value="/_api/web/folders">
                 Add a new folder to a list
-            </option>
-            <option method="POST"
-                    body=""
-                    headers='{ "accept": "application/json;odata=verbose",
-	                   "content-type": "application/json;odata=verbose",
-	                   "X-HTTP-Method": "DELETE",
-	                   "If-Match": "*",
-	                   "X-RequestDigest": "__yourRequestDigest__"}'
-                    notes="Change the list title, item ID! DELETE does not return any data. For more info on eTags and If-Match see: https://blogs.msdn.microsoft.com/uksharepoint/2013/02/22/manipulating-list-items-in-sharepoint-hosted-apps-using-the-rest-api/"
-                    sampleJSON="data.d.Id"
-                    value="/_api/web/lists/GetByTitle('Announcements')/Items(1)">
-                Delete an item from a list using ID
-            </option>
-            <option method="POST"
-                    body=""
-                    headers='{ "accept": "application/json;odata=verbose",
-	                   "content-type": "application/json;odata=verbose",
-	                   "X-HTTP-Method": "DELETE",
-	                   "If-Match": "*",
-	                   "X-RequestDigest": "__yourRequestDigest__"}'
-                    notes="Change the list title, item ID! DELETE does not return any data. The item is NOT sent to the Recyle Bin! To send to the Recycle Bin add /recycle(). For more info on eTags and If-Match see: https://blogs.msdn.microsoft.com/uksharepoint/2013/02/22/manipulating-list-items-in-sharepoint-hosted-apps-using-the-rest-api/"
-                    sampleJSON="data.d.Id"
-                    value="/_api/web/getfilebyserverrelativeurl('/sites/workflowtest/Shared%20Documents/AirplaneLogo.jpg')">
-                Delete an item from a list using its URL
-            </option>
-            <option method="POST"
-                    body=""
-                    headers='{ "accept": "application/json;odata=verbose",
-	                   "content-type": "application/json;odata=verbose",
-	                   "X-HTTP-Method": "DELETE",
-	                   "If-Match": "*",
-	                   "X-RequestDigest": "__yourRequestDigest__"}'
-                    notes="Change the list title, item ID! DELETE does not return any data. For more info on eTags and If-Match see: https://blogs.msdn.microsoft.com/uksharepoint/2013/02/22/manipulating-list-items-in-sharepoint-hosted-apps-using-the-rest-api/"
-                    sampleJSON="data.d.Id"
-                    value="/_api/web/lists/GetByTitle('Announcements')/Items(1)/recycle()">
-                Delete an item, to the Recycle Bin, from a list using ID
-            </option>
-            <option method="POST"
-                    body='{ "__metadata": { "type": "SP.ListItem" }, "Title": "New title" }'
-                    headers='{ "accept": "application/json;odata=verbose",
-	                   "content-type": "application/json;odata=verbose",
-	                   "X-HTTP-Method": "MERGE",
-	                   "If-Match": "*",
-	                   "X-RequestDigest": "__yourRequestDigest__"}'
-                    notes="Change the list title, item ID! DELETE does not return any data. For more info on eTags and If-Match see: https://blogs.msdn.microsoft.com/uksharepoint/2013/02/22/manipulating-list-items-in-sharepoint-hosted-apps-using-the-rest-api/"
-                    sampleJSON="data.d.Id"
-                    value="/_api/web/lists/GetByTitle('Announcements')/Items(1)">
-                Update an item using ID
             </option>
             <option method="POST"
                     body=""
@@ -634,20 +661,6 @@
                     sampleJSON="data.d.Id"
                     value="/_api/web/lists/GetByTitle('Announcements')/recycle()">
                 Delete a list to the Recycle Bin
-            </option>
-            <option method="POST"
-                    body='{"__metadata":{"type":"SP.Data.Shared_x0020_DocumentsItem"},
-                           "Title":"TestToysDocs", "FileLeafRef":"TestToysDocs" }'
-                    headers='{ "accept": "application/json;odata=verbose",
-                       "content-type": "application/json;odata=verbose",
-                       "X-HTTP-Method": "MERGE",
-                       "If-Match":  "*",
-                       "content-length":__len__,
-                       "X-RequestDigest": "__yourRequestDigest__"}'
-                    notes="Update the URL to select the folder, and update the Body to supply the new names."
-                    sampleJSON="data.d.Id"
-                    value="/_api/web/GetFolderByServerRelativeUrl('Shared Documents/Toys')/ListItemAllFields">
-                Rename a folder
             </option>
         </optgroup>
 
