@@ -24,7 +24,9 @@ To use:
  10. Click **OK** and then in the ribbon click **Stop Editing**.
  11. You should now see the tester. Click the dropdown and you should see data in the boxes. If not, then the jQuery library did not get loaded.
 
-** Examples included **
+<br><br>
+
+**Examples included**
 
 **Search Queries (/_api/search/query)**
 
