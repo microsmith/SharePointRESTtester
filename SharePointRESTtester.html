@@ -10,7 +10,7 @@
     // You may use this code for personal use to write and test SP REST or just to study!
     // You may not republish this in another blog, or other format.
     
-    // Last updated: 5/17/18
+    // Last updated: 7/6/18
 
     // metadata info: /_vti_bin/Client.svc/$metadata
 
@@ -436,6 +436,22 @@
             <option method="GET"
                     body=""
                     headers='{"accept": "application/json; odata=verbose"}'
+                    notes="Change the list name and the item ID. "
+                    sampleJSON="data.d.results.length"
+                    value="/_api/web/lists/getbytitle('Tasks')/Items/GetById(7)/AttachmentFiles">
+                Get info about list attachments.
+            </option>
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
+                    notes="Change the list name, the item ID and the document name. "
+                    sampleJSON="data.d.results.length"
+                    value="/_api/web/lists/getbytitle('Tasks')/Items/GetById(7)/AttachmentFiles('SomeDocument.docx')">
+                Get info about a single list attachment.
+            </option>
+            <option method="GET"
+                    body=""
+                    headers='{"accept": "application/json; odata=verbose"}'
                     notes="Change the list/library name and the file name. "
                     sampleJSON="data.d.results.length"
                     value="/_api/web/lists/getbytitle('Documents')/Items?$filter=FileLeafRef eq 'AdventureWorksBikes.xlsx'&$select=Title,Id">
@@ -446,7 +462,7 @@
                     headers='{"accept": "application/json; odata=verbose"}'
                     notes="Change the list/library name. "
                     sampleJSON="data.d.results.length"
-                    value="/sites/workflowtest/_api/web/lists/getbytitle('Tasks')/Items/GetById(2)?$select=Title">
+                    value="/_api/web/lists/getbytitle('Tasks')/Items/GetById(2)?$select=Title">
                 Get a list/library item by ID and display the Title.
             </option>
             <option method="GET"
@@ -554,6 +570,18 @@
                     sampleJSON="data.d.ItemCount"
                     value="/_api/web/getfolderbyserverrelativeurl('/sites/yourSite/Lists/yourList/yourFolder')/itemcount">
                 Get a count of items in a list folder.
+            </option>
+            <option method="POST"
+                    body=""
+                    headers='{ "accept": "application/json;odata=verbose",
+                       "content-type": "application/json;odata=verbose",
+                       "If-Match":  "*",
+                       "content-length":0,
+                       "X-RequestDigest": "__yourRequestDigest__"}'
+                    notes="Update the URL to select the folder, and update the Body to supply the new names."
+                    sampleJSON="data.d.Id"
+                    value="/_api/Web/Folders/add('Shared Documents/TestFolder')">
+                Add a folder
             </option>
             <option method="POST"
                     body='{"__metadata":{"type":"SP.Data.Shared_x0020_DocumentsItem"},
@@ -958,7 +986,7 @@
 	                   "X-RequestDigest": "__yourRequestDigest__"}'
                     notes="Change the 'sitename' in the URL! "
                     sampleJSON="data.d"
-                    value="/sites/permissions/sitename/_api/web/breakroleinheritance(copyRoleAssignments=true, clearSubscopes=true)">
+                    value="/_api/web/breakroleinheritance(copyRoleAssignments=true, clearSubscopes=true)">
                 Break inheritance on a subsite.
             </option>
             <option method="POST"
